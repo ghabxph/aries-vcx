@@ -2,61 +2,49 @@
 extern crate log;
 extern crate serde;
 #[macro_use]
-extern crate serde_derive;
-#[macro_use]
 extern crate serde_json;
 #[cfg(feature = "mysql_test")]
-#[macro_use]
 extern crate sqlx;
 
 #[cfg(feature = "mysql_test")]
-mod dbtests {
+mod test_utils {
     use sqlx::{Connection, MySqlConnection};
-    use sqlx::Executor;
-    use sqlx::prelude;
-    use sqlx::prelude::*;
 
-    #[cfg(feature = "mysql_test")]
     pub async fn setup_mysql_walletdb() -> Result<String, sqlx::Error> {
-        info!("Running query.");
+        debug!("Running query.");
         let db_name = format!("mysqltest_{}", uuid::Uuid::new_v4().to_string()).replace("-", "_");
         let url = "mysql://root:mysecretpassword@localhost:3306";
         let mut connection = MySqlConnection::connect(url).await?;
         let query = format!("CREATE DATABASE {};", db_name);
         let query = sqlx::query(&query);
         let res = query.execute(&mut connection).await;
-        warn!("Create database result: {:?}", res);
-        connection.close().await;
+        debug!("Create database result: {:?}", res);
+        connection.close().await.unwrap();
 
         let url = format!("mysql://root:mysecretpassword@localhost:3306/{}", db_name);
         let mut connection = MySqlConnection::connect(&url).await?;
         let res = sqlx::migrate!("./migrations")
             .run(&mut connection)
             .await;
-        warn!("Create tables result: {:?}", res);
+        debug!("Create tables result: {:?}", res);
         Ok(db_name)
     }
+}
 
-    #[cfg(test)]
-    #[cfg(feature = "mysql_test")]
+#[cfg(feature = "mysql_test")]
+#[cfg(test)]
+mod dbtests {
     mod test {
-        use std::env;
-        use std::fs::File;
-        use std::io::Read;
+        use futures::executor::block_on;
 
-        use serde_json::Value;
-        use uuid::Uuid;
-
-        use aries_vcx::{libindy, settings};
-        use aries_vcx::handlers::connection::connection::Connection;
         use aries_vcx::init::{init_issuer_config, open_as_main_wallet};
         use aries_vcx::libindy::utils::wallet::{close_main_wallet, configure_issuer_wallet, create_wallet, WalletConfig};
+        use aries_vcx::settings;
         use aries_vcx::utils::devsetup::{AGENCY_DID, AGENCY_ENDPOINT, AGENCY_VERKEY};
         use aries_vcx::utils::provision::{AgentProvisionConfig, provision_cloud_agent};
         use aries_vcx::utils::test_logger::LibvcxDefaultLogger;
 
-        use futures::executor::block_on;
-        use crate::dbtests::setup_mysql_walletdb;
+        use crate::test_utils::setup_mysql_walletdb;
 
         #[test]
         fn test_provision_cloud_agent_with_mysql_wallet() {
@@ -64,15 +52,15 @@ mod dbtests {
             let db_name = block_on(setup_mysql_walletdb()).unwrap();
 
             let storage_config = json!({
-            "read_host": "localhost",
-            "write_host": "localhost",
-            "port": 3306,
-            "db_name": db_name,
-            "default_connection_limit": 50
+                "read_host": "localhost",
+                "write_host": "localhost",
+                "port": 3306,
+                "db_name": db_name,
+                "default_connection_limit": 50
           }).to_string();
             let storage_credentials = json!({
-            "user": "root",
-            "pass": "mysecretpassword"
+                "user": "root",
+                "pass": "mysecretpassword"
         }).to_string();
             let enterprise_seed = "000000000000000000000000Trustee1";
             let config_wallet = WalletConfig {
