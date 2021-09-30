@@ -957,23 +957,51 @@ jobs:
         run: |
           docker image ls --format "{{.Repository}}:{{.Tag}}" | grep "$DOCKER_IMG_NAME_LIBVCX" || { echo "Image $DOCKER_IMG_NAME_LIBVCX was not found!" ; exit 1; }
 
-      - name: Docker Login
+      - name: Docker Login at hub.docker.com
         uses: azure/docker-login@v1
         with:
-          login-server: ghcr.io
-          username: $GITHUB_ACTOR
-          password: ${{ secrets.GITHUB_TOKEN }}
+          login-server: hub.docker.com
+          username: pstas
+          password: ${{ secrets.DOCKERHUB_PATRIK }}
 
-      - name: Publish image
+      - name: Publish image at hub.docker.com
         run: |
           if [[ "$PUBLISH_VERSION" ]]
           then
             IFS=$':' read -a arr <<< $DOCKER_IMG_NAME_LIBVCX
             DOCKER_IMG_NAME_TAGLESS=${arr[0]}
             GITHUB_REPOSITORY_LOWERCASE=`echo $GITHUB_REPOSITORY | awk '{print tolower($0)}'`
+
+            REMOTE_DOCKER_IMG_NAME_LIBVCX_DOCKERHUB="pstas/aries-vcx:${PUBLISH_VERSION}"
+
+            echo "Releasing libvcx docker image version $PUBLISH_VERSION, tagged $REMOTE_DOCKER_IMG_NAME_LIBVCX_DOCKERHUB"
+            docker tag "$DOCKER_IMG_NAME_LIBVCX" "$REMOTE_DOCKER_IMG_NAME_LIBVCX_DOCKERHUB"
+
+            docker push "$$REMOTE_DOCKER_IMG_NAME_LIBVCX_DOCKERHUB" || true
+          else
+             echo "New version was not defined, skipping release."
+          fi
+
+      - name: Docker Login at ghcr.io
+        uses: azure/docker-login@v1
+        with:
+          login-server: ghcr.io
+          username: $GITHUB_ACTOR
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Publish image at ghcr.io
+        run: |
+          if [[ "$PUBLISH_VERSION" ]]
+          then
+            IFS=$':' read -a arr <<< $DOCKER_IMG_NAME_LIBVCX
+            DOCKER_IMG_NAME_TAGLESS=${arr[0]}
+            GITHUB_REPOSITORY_LOWERCASE=`echo $GITHUB_REPOSITORY | awk '{print tolower($0)}'`
+
             REMOTE_DOCKER_IMG_NAME_LIBVCX="ghcr.io/${GITHUB_REPOSITORY_LOWERCASE}/${DOCKER_IMG_NAME_TAGLESS}:${PUBLISH_VERSION}"
+
             echo "Releasing libvcx docker image version $PUBLISH_VERSION, tagged $REMOTE_DOCKER_IMG_NAME_LIBVCX"
             docker tag "$DOCKER_IMG_NAME_LIBVCX" "$REMOTE_DOCKER_IMG_NAME_LIBVCX"
+
             docker push "$REMOTE_DOCKER_IMG_NAME_LIBVCX" || true
           else
              echo "New version was not defined, skipping release."
