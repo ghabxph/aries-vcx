@@ -977,7 +977,7 @@ jobs:
             echo "Releasing libvcx docker image version $PUBLISH_VERSION, tagged $REMOTE_DOCKER_IMG_NAME_LIBVCX_DOCKERHUB"
             docker tag "$DOCKER_IMG_NAME_LIBVCX" "$REMOTE_DOCKER_IMG_NAME_LIBVCX_DOCKERHUB"
 
-            docker push "$$REMOTE_DOCKER_IMG_NAME_LIBVCX_DOCKERHUB" || true
+            docker push "$REMOTE_DOCKER_IMG_NAME_LIBVCX_DOCKERHUB" || true
           else
              echo "New version was not defined, skipping release."
           fi
