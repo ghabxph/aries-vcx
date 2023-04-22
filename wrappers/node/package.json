@@ -63,7 +63,7 @@
     "mocha": "^7.2.0",
     "prettier": "^2.2.1",
     "ts-node": "^6.1.2",
-    "typedoc": "^0.15.4",
+    "typedoc": "^0.24.4",
     "typescript": "^3.0.0"
   },
   "scripts": {
