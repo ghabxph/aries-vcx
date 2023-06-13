@@ -830,7 +830,7 @@ dependencies = [
  "serde_derive",
  "serde_json",
  "time",
- "tokio 1.7.1",
+ "tokio 1.18.5",
  "toml",
  "uuid",
 ]
@@ -1814,11 +1814,10 @@ dependencies = [
 
 [[package]]
 name = "tokio"
-version = "1.7.1"
+version = "1.18.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5fb2ed024293bb19f7a5dc54fe83bf86532a44c12a2bb8ba40d64a4509395ca2"
+checksum = "0e050c618355082ae5a89ec63bbf897225d5ffe84c7c4e036874e4d185a5044e"
 dependencies = [
- "autocfg 1.0.1",
  "num_cpus",
  "pin-project-lite",
 ]
